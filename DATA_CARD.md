@@ -24,12 +24,15 @@ therefore redistributes only a small amount of derived data and NESO's forecast 
 
 ## 3. Licence and attribution
 
-> **Action required before launch.** The build environment used to write this project could not reach the data
-> provider's website, so the licence text was **not** re-read here. Before making the repo public, confirm the current
-> licence/terms at <https://carbonintensity.org.uk/> (and the NESO data portal) and put the exact wording below.
+The data provider states on <https://carbonintensity.org.uk/> (checked 13 Nov 2026) that the API is licensed under **Creative Commons Attribution 4.0 International (CC BY 4.0)**: <https://creativecommons.org/licenses/by/4.0/>. Terms of Use: <http://terms.carbonintensity.org.uk>. The Carbon Intensity API is developed by NESO (National Energy System Operator) in partnership with Environmental Defense Fund Europe, the University of Oxford Department of Computer Science and WWF.
 
-Attribution used on the dashboard and README: *"Contains data from the Carbon Intensity API, produced by NESO (National Energy System Operator)."*
-This project is independent: **not affiliated with, sponsored by, or endorsed by NESO.** The code is MIT-licensed; the data keeps its own licence.
+How this project meets CC BY 4.0:
+
+1. **Attribution:** *"Contains data from the Carbon Intensity API, produced by NESO (National Energy System Operator), in partnership with Environmental Defense Fund Europe, the University of Oxford Department of Computer Science and WWF. Licensed under CC BY 4.0."* This appears on the dashboard and in the README.
+2. **Licence link:** given above.
+3. **Changes indicated:** NESO forecast snapshots in `data/raw/` are stored exactly as received. Everything else in `data/` (forecasts, scores, metrics, summaries) is derived by this project and is **not** NESO's data or NESO's forecast.
+
+This project is independent: **not affiliated with, sponsored by, or endorsed by NESO or its partners.** The code is MIT-licensed; the data keeps its own licence.
 
 ## 4. Data ethics & responsible use
 
