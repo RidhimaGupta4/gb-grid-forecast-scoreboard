@@ -104,8 +104,6 @@ The pinball average over 7 levels is a coarse approximation to CRPS and is **not
 
 **What it does not prove.** The repo owner could, in principle, replace the *entire* history (chain included) before anyone clones it. Defences are social and external: forks/clones of the public repo, a tagged protocol release before the first issue, and — recommended on the [roadmap](#roadmap) — anchoring the ledger head externally (e.g. OpenTimestamps or a Zenodo snapshot). Receipts also rely on the GitHub Events API, which keeps only ~90 days/300 events; the daily job collects them well inside that window.
 
-> I originally pitched this as "leakage impossible by construction". That was too strong, and it is not claimed here: the correct statement is that *forecast-time leakage is prevented by construction in code and made detectable in public*, while the remaining risks (owner rewriting history, API semantics, benchmark vintage) are enumerated in [PROTOCOL §11](PROTOCOL.md#11-leakage-threat-model).
-
 ## The dashboard
 
 A single self-contained static page (HTML + vendored Plotly; no server, no CDN, no trackers), rebuilt after every data-writing run:
@@ -118,10 +116,6 @@ A single self-contained static page (HTML + vendored Plotly; no server, no CDN, 
 6. **When does it fail?** — pre-registered strata + the ten biggest NESO misses.
 7. **Trust & provenance** — chain status, receipt counts, excluded rows.
 
-**Why GitHub Pages and not Streamlit/Hugging Face/Tableau?** A static page never sleeps, loads instantly for a recruiter or reviewer, costs nothing, lives in the same auditable repo as the data, and cannot drift from it. A hosted Python app adds a runtime that can sleep or break and a second place where numbers could disagree. Mirrors (e.g. a Hugging Face Space for ML audiences, a Tableau Public snapshot for BI audiences) are optional extras and should *read the published `summary.json`*, never recompute.
-
-**Palette.** Midnight-navy canvas; the top ribbon echoes the carbon-intensity index (green → red). Models are identity-coloured and consistent everywhere: NESO amber, NESO+conformal mint, anomaly-persistence sky, climatology lilac. Information is never carried by colour alone (direct labels, markers, hover text).
-
 ## Quickstart
 
 ```bash
@@ -132,19 +126,6 @@ gridscore smoke        # needs internet: read-only check of the live API's behav
 gridscore verify       # re-verify the hash chain of the committed data
 gridscore report && gridscore site   # rebuild dashboard from committed data into site_build/
 ```
-
-### Launch checklist (do these in order)
-
-1. Create the GitHub repo `gb-grid-forecast-scoreboard` (public) and push this code.
-2. **Settings → Pages → Source: GitHub Actions.**
-3. **Settings → Branches → protect `main`:** disallow force-push and deletion (do *not* require PRs, or the bot cannot push).
-4. **Settings → Actions → General → Workflow permissions: Read and write.**
-5. **Re-check the data licence** at the provider and edit [`DATA_CARD.md`](DATA_CARD.md) §3 with the exact wording.
-6. Run workflow **`smoke`** manually. Do not continue until it prints `SMOKE OK`. *(This project was developed and tested offline against synthetic fixtures; the live endpoints' behaviour is the one thing that must be confirmed on first contact.)*
-7. Tag the frozen protocol: `git tag protocol-v1.0.0 && git push --tags` (optionally create a GitHub Release and archive it on Zenodo for a DOI).
-8. Run **`issue`** manually once, then check that `data/` gained a forecast, a raw snapshot, a manifest and a ledger line, and that `gridscore verify` passes.
-9. Let the schedule run. Check the Actions tab at least monthly: GitHub can disable scheduled workflows after ~60 days of repository inactivity and can delay or skip scheduled runs.
-10. After ~1 week, add a real screenshot to the README (not before: the page is intentionally empty until real outcomes exist).
 
 ## Repository layout
 
