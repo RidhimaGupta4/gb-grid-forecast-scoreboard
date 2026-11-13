@@ -59,11 +59,25 @@ def _smoke() -> int:
     b0 = first_target(now)
     problems = []
     nf, f1 = api.fw48h(b0)
-    print(f"fw48h from {b0}: {len(nf)} rows, forecast non-null={int(nf['forecast'].notna().sum())}, actual non-null={int(nf['actual'].notna().sum())}")
-    if len(nf) < N_STEPS - 4:
-        problems.append(f"fw48h returned {len(nf)} rows, expected ~{N_STEPS}")
-    if len(nf) and nf["from_"].min() < b0:
-        problems.append("fw48h returned periods before the requested start")
+    nf = nf.sort_values("from_").reset_index(drop=True)
+    print(f"fw48h requested from {b0}: {len(nf)} rows, forecast non-null={int(nf['forecast'].notna().sum())}, actual non-null={int(nf['actual'].notna().sum())}")
+    if len(nf):
+        print(f"  first row from={nf['from_'].iloc[0]}  last row from={nf['from_'].iloc[-1]}")
+    expected = pd.DatetimeIndex([b0 + STEP * k for k in range(N_STEPS)])
+    have = nf.set_index("from_")
+    missing = [t for t in expected if t not in have.index]
+    if missing:
+        problems.append(f"fw48h is missing {len(missing)} of the {N_STEPS} expected target periods (first missing: {missing[0]})")
+    else:
+        nulls = int(have.loc[expected, "forecast"].isna().sum())
+        if nulls:
+            problems.append(f"{nulls} of the {N_STEPS} expected target periods have a null forecast")
+        leaked = int(have.loc[expected, "actual"].notna().sum())
+        if leaked:
+            print(f"  note: {leaked} target periods already carry an `actual` (the engine ignores it)")
+    extra = nf[~nf["from_"].isin(expected)]
+    if len(extra):
+        print(f"  note: {len(extra)} extra row(s) outside the 96 target stamps (harmless, the engine selects targets by exact timestamp): {[str(t) for t in extra['from_']]}")
     if len(nf) and not ((nf["to_"] - nf["from_"]) == STEP).all():
         problems.append("fw48h periods are not 30 minutes long")
     h, fs = api.range(now - pd.Timedelta(days=3), now - pd.Timedelta(hours=2))
