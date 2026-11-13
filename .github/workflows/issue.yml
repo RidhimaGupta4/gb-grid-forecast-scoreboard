@@ -1,0 +1,36 @@
+name: issue
+# Issues a pre-registered forecast batch four times a day. GitHub cron can be delayed by minutes
+# (and occasionally skipped); every batch records its true issue time, and skipped slots simply
+# do not exist -- they are never back-filled.
+on:
+  schedule:
+    - cron: "17 0,6,12,18 * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: data-writes
+  cancel-in-progress: false
+jobs:
+  issue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -e .
+      - name: Issue forecasts (aborts rather than issue anything contaminated or late)
+        run: gridscore issue
+      - name: Commit and push (the push time is the pre-registration timestamp)
+        run: |
+          git config user.name "gridscore-bot"
+          git config user.email "gridscore-bot@users.noreply.github.com"
+          git add data
+          git commit -m "issue: $(date -u +%Y-%m-%dT%H:%MZ)"
+          for i in 1 2 3; do
+            git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && exit 0
+            sleep 5
+          done
+          echo "push failed: this batch is NOT pre-registered and will be rejected at scoring"; exit 1

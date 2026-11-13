@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+title: "GB Grid Forecast Scoreboard: a live, pre-registered, leakage-audited test of NESO's carbon-intensity forecast"
+message: "If you use this software or its results, please cite it."
+type: software
+authors:
+  - family-names: Gupta
+    given-names: Ridhima
+repository-code: "https://github.com/RidhimaGupta4/gb-grid-forecast-scoreboard"
+license: MIT
+version: 1.0.0
+keywords: [forecast evaluation, conformal prediction, carbon intensity, pre-registration, GB electricity grid]

@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GB Grid Forecast Scoreboard — can anyone beat NESO's carbon-intensity forecast?</title>
+<meta name="description" content="A live, pre-registered scoreboard testing whether transparent probabilistic models can beat NESO's published GB carbon-intensity forecast, and where they fail.">
+<style>
+:root{
+  --bg:#070D1A; --panel:#0F1930; --panel2:#14223F; --line:#22335A; --text:#E8EEF9; --muted:#8CA0C4; --faint:#5B6F96;
+  --neso:#FFB020; --cqr:#2EE6A6; --anom:#4CC9F0; --clim:#A78BFA; --bad:#FF6B8A; --good:#2EE6A6;
+  --ribbon:linear-gradient(90deg,#2EE6A6,#9BE15D,#FFD166,#FF8A5B,#FF4D6D);
+}
+*{box-sizing:border-box} html{scroll-behavior:smooth}
+body{margin:0;background:radial-gradient(1200px 600px at 80% -10%,#10234a 0%,transparent 60%),var(--bg);color:var(--text);
+  font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-variant-numeric:tabular-nums}
+a{color:var(--anom)} code{background:var(--panel2);padding:1px 6px;border-radius:5px;font-size:.9em}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 60px}
+.ribbon{height:5px;border-radius:5px;background:var(--ribbon);margin:0 0 22px}
+h1{font-size:clamp(26px,4vw,40px);line-height:1.15;margin:0 0 8px;letter-spacing:-.02em}
+h2{font-size:20px;margin:0 0 4px;letter-spacing:-.01em} .sub{color:var(--muted);margin:0 0 14px;max-width:880px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 4px}
+.chip{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:13px;color:var(--muted)}
+.chip b{color:var(--text);font-weight:600}.chip.ok b{color:var(--good)}.chip.warn b{color:var(--neso)}.chip.bad b{color:var(--bad)}
+.banner{border:1px solid var(--line);border-left:4px solid var(--neso);background:var(--panel);border-radius:10px;padding:12px 16px;margin:18px 0}
+.banner.claims{border-left-color:var(--good)}
+section{background:linear-gradient(180deg,var(--panel),#0c1529);border:1px solid var(--line);border-radius:14px;padding:20px 20px 16px;margin:18px 0}
+.grid{display:grid;gap:18px}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}
+@media(max-width:860px){.g2,.g3{grid-template-columns:1fr}}
+.card{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px}
+.card h3{margin:0 0 8px;font-size:14px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.vrow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line)}
+.vrow:first-of-type{border-top:none}
+.pill{font-size:12px;border-radius:999px;padding:2px 10px;border:1px solid var(--line);white-space:nowrap}
+.pill.better{color:var(--good);border-color:var(--good)}.pill.worse{color:var(--bad);border-color:var(--bad)}
+.pill.no_difference{color:var(--muted)}.pill.insufficient{color:var(--neso);border-color:#7a5a12}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:7px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}th,td{padding:7px 8px;text-align:right;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.05em}th:first-child,td:first-child{text-align:left}
+td.best{color:var(--good);font-weight:700} td.off{color:var(--bad)} tr.warm td{color:var(--faint)}
+.controls{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 10px}
+button,select{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer}
+button.on{border-color:var(--anom);box-shadow:0 0 0 1px var(--anom) inset}
+.plot{width:100%;min-height:360px}.note{color:var(--muted);font-size:13px;margin:8px 0 0}
+.empty{padding:30px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:10px}
+footer{color:var(--muted);font-size:13px;margin-top:28px}footer p{margin:6px 0}
+.scroll{overflow-x:auto}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="ribbon" aria-hidden="true"></div>
+  <h1>GB Grid Forecast Scoreboard</h1>
+  <p class="sub">Can a transparent probabilistic model beat NESO's own carbon-intensity forecast &mdash; and when does it fail?
+     Every forecast below was committed to Git <em>before</em> its outcome existed, then scored against real data.</p>
+  <div class="chips" id="chips"></div>
+  <div id="banner"></div>
+
+  <section id="verdicts"><h2>Verdict: challengers vs NESO</h2>
+    <p class="sub">&Delta; = mean pinball loss of the challenger minus NESO's, paired on identical targets. <b>Negative = challenger better.</b> Bars are 95% moving-block-bootstrap intervals over days.</p>
+    <div class="controls" id="metricBtns"><button data-k="pinball" class="on">Probabilistic score (pinball)</button><button data-k="mae">Point accuracy (MAE of median)</button></div>
+    <div id="verdictCards" class="grid g3"></div>
+    <div id="forest" class="plot" style="min-height:330px"></div>
+    <p class="note"><b>Read both views.</b> NESO publishes a point forecast with no intervals, so any model that outputs calibrated bands has a built-in edge on pinball loss; <em>point accuracy</em> is the like-for-like test of the central forecast. Each view is its own pre-registered family: 3 challengers &times; 3 horizon buckets, Holm-adjusted. A verdict needs &ge; <span id="minDays"></span> scored days, a CI excluding 0 <em>and</em> an adjusted p &lt; 0.05. The 0&ndash;48 h row is descriptive.</p>
+  </section>
+
+  <section id="board"><h2>Leaderboard</h2>
+    <p class="sub">All models scored on exactly the same targets (common support). NESO issues a point forecast only, so its interval columns are empty by design.</p>
+    <div class="controls" id="bucketBtns"></div><div class="scroll"><table id="lbTable"></table></div>
+    <p class="note" id="lbNote"></p>
+  </section>
+
+  <section id="fan"><h2>The forecasts themselves</h2>
+    <p class="sub">Shaded bands = 50% and 90% predictive intervals. Choose a batch and the models to display.</p>
+    <div class="controls" id="fanBtns"></div><div class="controls" id="fanModels"></div>
+    <div id="fanPlot" class="plot" style="min-height:420px"></div><p class="note" id="fanNote"></p>
+  </section>
+
+  <section id="calib"><h2>Calibration &mdash; do the intervals mean what they say?</h2>
+    <p class="sub">If a model says "90%", about 90% of outcomes should land inside. Points on the diagonal are calibrated; a flat line at 0.5 is what a point forecast looks like.</p>
+    <div class="controls"><select id="relBucket"></select></div>
+    <div class="grid g2"><div id="relPlot" class="plot"></div><div id="covPlot" class="plot"></div></div>
+  </section>
+
+  <section id="time"><h2>Over time</h2>
+    <p class="sub">Daily paired &Delta; pinball vs NESO (dots) and 7-day rolling mean (line). Below zero = the challenger is ahead that day.</p>
+    <div id="tsPlot" class="plot"></div>
+  </section>
+
+  <section id="fail"><h2>When does it fail?</h2>
+    <p class="sub">Stratified by information known <em>at issue time</em> (local time, day type, NESO's forecast level) &mdash; never by the realised outcome, which would bias calibration. Exploratory: no multiplicity adjustment.</p>
+    <div class="controls"><select id="strataDim"></select></div><div id="strataPlot" class="plot"></div>
+    <h2 style="margin-top:18px">Ten biggest misses by NESO</h2><div class="scroll"><table id="worstTable"></table></div>
+  </section>
+
+  <section id="trust"><h2>Trust &amp; provenance</h2><div id="trustBody" class="grid g3"></div></section>
+
+  <footer>
+    <p><b>Data:</b> Contains data from the Carbon Intensity API, produced by NESO (National Energy System Operator). Not affiliated with or endorsed by NESO. Check the licence terms at the data source.</p>
+    <p><b>Not for operational use.</b> This is a research scoreboard, not advice; see the repository for limitations, data ethics and the full pre-registered protocol.</p>
+  </footer>
+</div>
+<noscript><p style="padding:20px">This dashboard needs JavaScript. All underlying data is in the repository.</p></noscript>
+<script src="plotly.min.js"></script>
+<script>
+const S = /*__SUMMARY_JSON__*/null;
+const COL = {neso_point:'#FFB020', neso_cqr:'#2EE6A6', anomaly_persist:'#4CC9F0', climatology:'#A78BFA'};
+const NAME = k => (S && S.meta.models[k]) ? S.meta.models[k].label : k;
+const BL = S ? S.meta.bucket_label : {};
+const f = (x,d=2)=> (x===null||x===undefined)?'—':Number(x).toFixed(d);
+const pc = x => (x===null||x===undefined)?'—':(100*x).toFixed(1)+'%';
+const $ = id => document.getElementById(id);
+const AX = {gridcolor:'#1b2a4d',zerolinecolor:'#33477a',linecolor:'#22335A',automargin:true};
+const base = (extra={}) => { const o = Object.assign({paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:'rgba(0,0,0,0)',font:{color:'#E8EEF9',size:12},
+  margin:{l:60,r:20,t:16,b:50},legend:{orientation:'h',y:-0.25,yanchor:'top'},hoverlabel:{bgcolor:'#14223F',font:{color:'#E8EEF9'}}}, extra);
+  o.xaxis = Object.assign({}, AX, extra.xaxis||{}); o.yaxis = Object.assign({}, AX, extra.yaxis||{});
+  ['xaxis','yaxis'].forEach(k=>{ if(typeof o[k].title==='string') o[k].title={text:o[k].title, standoff:8}; }); return o; };
+const cfg = {displaylogo:false,responsive:true,modeBarButtonsToRemove:['lasso2d','select2d']};
+const empty = (id,msg)=>{ const el=$(id); el.style.minHeight='0'; el.innerHTML = `<div class="empty">${msg}</div>`; };
+const ago = iso => { if(!iso) return '—'; const m=(Date.now()-Date.parse(iso))/60000; return m<90?Math.round(m)+' min ago':m<2880?Math.round(m/60)+' h ago':Math.round(m/1440)+' d ago'; };
+
+function chips(){
+  const c=S.counts, v=S.verification, led=v.ledger||{};
+  const items=[
+    ['Last forecast batch', ago(c.last_issue), 'ok'],
+    ['Batches issued', c.issues, ''],
+    ['Days scored', c.days_scored, c.days_scored>=S.meta.min_days_for_claim?'ok':'warn'],
+    ['Hash-chain', led.ok===false?'BROKEN':(led.ok===true&&led.n_entries>0?`verified (${led.n_entries} entries)`:'no entries yet'), led.ok===false?'bad':(led.n_entries>0?'ok':'')],
+    ['Push-receipt verified', c.scored_rows? pc(c.verified_rows/Math.max(1,c.scored_rows)):'—', c.violated_rows?'bad':''],
+    ['Protocol', 'v'+S.meta.protocol_version, '']];
+  $('chips').innerHTML = items.map(([a,b,k])=>`<span class="chip ${k}">${a}: <b>${b}</b></span>`).join('');
+}
+function banner(){
+  const c=S.counts; let t,cls='';
+  if(S.state==='warming_up') t=`<b>Warming up.</b> ${c.issues} forecast batch(es) issued; none has matured yet. Forecasts are scored &ge;24 h after their target period ends, so first numbers appear about two days after launch. Credible comparisons need &ge;${S.meta.min_days_for_claim} scored days &mdash; and a full year to cover every season. Nothing on this page is simulated: until real outcomes arrive, the charts stay empty on purpose.`;
+  else if(S.state==='insufficient_evidence') t=`<b>Early results (${c.days_scored} scored days).</b> Shown for transparency. No model is called better or worse until the benchmark and challenger each have &ge;${S.meta.min_days_for_claim} scored days.`;
+  else {t=`<b>Claims enabled.</b> Verdicts require a bootstrap CI excluding zero and a Holm-adjusted p &lt; 0.05 (HAC test on daily loss differentials). <b>They are provisional:</b> this page is re-evaluated continuously and is not corrected for repeated looks; the formal pre-registered analysis is at &ge;365 days. Exploratory cuts are labelled as such.`; cls='claims';}
+  $('banner').innerHTML = `<div class="banner ${cls}">${t}</div>`;
+}
+const VTXT={better:'beats NESO',worse:'worse than NESO',no_difference:'no detectable difference',insufficient:'insufficient evidence'};
+let METRIC='pinball';
+function verdicts(){
+  $('minDays').textContent=S.meta.min_days_for_claim;
+  const P=S.paired||[];
+  if(!P.length){ empty('verdictCards','No scored forecasts yet.'); empty('forest','The forest plot appears once forecasts have been scored.'); return; }
+  const key=METRIC, vk=METRIC==='pinball'?'verdict':'verdict_mae', unit=METRIC==='pinball'?'pinball':'MAE';
+  const bks=['h00_06','h06_24','h24_48'];
+  $('verdictCards').innerHTML = bks.map(b=>{
+    const rows=S.meta.challengers.map(m=>{const r=P.find(x=>x.model===m&&x.bucket===b); if(!r) return `<div class="vrow"><span><span class="dot" style="background:${COL[m]}"></span>${NAME(m)}</span><span class="pill insufficient">not issuing yet</span></div>`;
+      const s=r[key]; return `<div class="vrow"><span><span class="dot" style="background:${COL[m]}"></span>${NAME(m)}<br><small style="color:var(--muted)">&Delta; ${f(s.delta)} [${f(s.lo)}, ${f(s.hi)}] &middot; ${s.n_days} d</small></span><span class="pill ${r[vk]}">${VTXT[r[vk]]}</span></div>`;}).join('');
+    return `<div class="card"><h3>${BL[b]} ahead</h3>${rows}</div>`;}).join('');
+  const tr=[]; const ms=S.meta.challengers; const ys=[],tt=[];
+  bks.concat(['all']).forEach((b,i)=>{ys.push(i);tt.push(BL[b]);});
+  ms.forEach((m,j)=>{ const x=[],y=[],ep=[],em=[];
+    bks.concat(['all']).forEach((b,i)=>{const r=P.find(z=>z.model===m&&z.bucket===b); if(r&&r[key].delta!==null&&r[key].lo!==null){x.push(r[key].delta);y.push(i+(j-1)*0.22);ep.push(r[key].hi-r[key].delta);em.push(r[key].delta-r[key].lo);}});
+    tr.push({type:'scatter',mode:'markers',name:NAME(m),x,y,marker:{color:COL[m],size:11,symbol:'diamond'},error_x:{type:'data',symmetric:false,array:ep,arrayminus:em,color:COL[m],thickness:2.2,width:6},
+      hovertemplate:`${NAME(m)}<br>Δ ${unit} %{x:.3f} gCO₂/kWh<extra></extra>`});});
+  if(!tr.some(t=>t.x.length)){ empty('forest','Intervals need at least a few scored days per bucket.'); return; }
+  Plotly.newPlot('forest',tr,base({yaxis:{tickvals:ys,ticktext:tt,autorange:'reversed',gridcolor:'#1b2a4d'},xaxis:{title:`Δ mean ${unit} vs NESO (gCO₂/kWh) — negative is better`,gridcolor:'#1b2a4d',zeroline:false},
+    shapes:[{type:'line',x0:0,x1:0,y0:-0.6,y1:3.6,line:{color:'#FFB020',width:1.6,dash:'dash'}}],
+    annotations:[{x:0,y:-0.55,text:'NESO',showarrow:false,font:{color:'#FFB020',size:11}}],margin:{l:70,r:18,t:16,b:56}}),cfg);
+}
+function leaderboard(){
+  const L=S.leaderboard||[]; if(!L.length){ $('lbTable').innerHTML=''; $('bucketBtns').innerHTML=''; $('lbNote').textContent='Leaderboard appears after the first forecasts have been scored.'; return; }
+  const bks=['all','h00_06','h06_24','h24_48']; let cur='all';
+  $('bucketBtns').innerHTML=bks.map(b=>`<button data-b="${b}" class="${b===cur?'on':''}">${BL[b]}</button>`).join('');
+  const draw=()=>{
+    const rows=L.filter(r=>r.bucket===cur);
+    const best=(k,fn)=>{const v=rows.filter(r=>r.comparable&&fn(r)!==null&&fn(r)!==undefined).map(fn); return v.length?Math.min(...v):null;};
+    const bpb=best('pb',r=>r.mean_pinball), bmae=best('mae',r=>r.mae_med), bw=best('wk',r=>r.winkler90);
+    const covCls=(c,nom)=>{ if(!c||c.est===null) return ''; return (c.lo!==null&&c.hi!==null&&(nom<c.lo||nom>c.hi))?'off':''; };
+    let h='<tr><th>Model</th><th>Mean pinball</th><th>MAE (median)</th><th>90% coverage</th><th>50% coverage</th><th>Mean 90% width</th><th>Winkler 90</th><th>Rows</th></tr>';
+    rows.forEach(r=>{ const c90=r.cov90,c50=r.cov50;
+      h+=`<tr class="${r.comparable?'':'warm'}"><td><span class="dot" style="background:${COL[r.model]}"></span>${NAME(r.model)}${r.comparable?'':' <small>(warming up, own rows)</small>'}</td>
+      <td class="${r.comparable&&r.mean_pinball===bpb?'best':''}">${f(r.mean_pinball,3)}</td><td class="${r.comparable&&r.mae_med===bmae?'best':''}">${f(r.mae_med,2)}</td>
+      <td class="${covCls(c90,0.9)}">${c90?pc(c90.est)+(c90.lo!==null?` <small>[${pc(c90.lo)}, ${pc(c90.hi)}]</small>`:''):'n/a'}</td>
+      <td class="${covCls(c50,0.5)}">${c50?pc(c50.est):'n/a'}</td><td>${f(r.mean_w90,1)}</td><td class="${r.comparable&&r.winkler90===bw&&bw!==null?'best':''}">${f(r.winkler90,1)}</td><td>${r.n_rows}</td></tr>`;});
+    $('lbTable').innerHTML=h;
+    $('lbNote').innerHTML=`Common support: ${S.common_support.n_keys} issue&times;step pairs shared by ${S.common_support.models.map(NAME).join(', ')}. Red coverage = nominal level outside the 95% bootstrap interval. Green = best on that column. Pinball over 7 quantiles (5&ndash;95%); lower is better.`;
+  };
+  $('bucketBtns').onclick=e=>{ if(e.target.dataset.b){cur=e.target.dataset.b; [...$('bucketBtns').children].forEach(b=>b.classList.toggle('on',b.dataset.b===cur)); draw();} };
+  draw();
+}
+function fan(){
+  const opts=[['live',S.fan_live,'Latest issued batch (outcomes not yet known)'],['scored',S.fan_scored,'Latest fully scored batch (with realised actuals)']].filter(o=>o[1]);
+  if(!opts.length){ empty('fanPlot','No forecast batch has been issued yet.'); $('fanBtns').innerHTML=''; $('fanModels').innerHTML=''; return; }
+  let cur=opts[0][0]; const sel=new Set(['neso_point','neso_cqr']);
+  $('fanBtns').innerHTML=opts.map(o=>`<button data-k="${o[0]}" class="${o[0]===cur?'on':''}">${o[2]}</button>`).join('');
+  $('fanModels').innerHTML=Object.keys(S.meta.models).map(m=>`<button data-m="${m}" class="${sel.has(m)?'on':''}"><span class="dot" style="background:${COL[m]}"></span>${NAME(m)}</button>`).join('');
+  const rgba=(hex,a)=>{const n=parseInt(hex.slice(1),16);return `rgba(${n>>16},${(n>>8)&255},${n&255},${a})`;};
+  const draw=()=>{ const d=(opts.find(o=>o[0]===cur)||opts[0])[1]; const tr=[];
+    Object.entries(d.models).forEach(([m,v])=>{ if(!sel.has(m)) return; const c=COL[m];
+      if(m!=='neso_point'){
+        tr.push({x:v.t,y:v.q05,line:{width:0},showlegend:false,hoverinfo:'skip',type:'scatter',mode:'lines'});
+        tr.push({x:v.t,y:v.q95,fill:'tonexty',fillcolor:rgba(c,0.13),line:{width:0},name:NAME(m)+' 90%',hoverinfo:'skip',type:'scatter',mode:'lines'});
+        tr.push({x:v.t,y:v.q25,line:{width:0},showlegend:false,hoverinfo:'skip',type:'scatter',mode:'lines'});
+        tr.push({x:v.t,y:v.q75,fill:'tonexty',fillcolor:rgba(c,0.28),line:{width:0},name:NAME(m)+' 50%',hoverinfo:'skip',type:'scatter',mode:'lines'});
+      }
+      tr.push({x:v.t,y:v.q50,type:'scatter',mode:'lines',name:NAME(m)+(m==='neso_point'?'':' median'),line:{color:c,width:m==='neso_point'?2.6:1.8,dash:m==='neso_point'?'solid':'dot'}});});
+    if(d.actual) tr.push({x:d.actual.t,y:d.actual.y,type:'scatter',mode:'lines+markers',name:'Actual',line:{color:'#E8EEF9',width:2},marker:{size:4}});
+    Plotly.newPlot('fanPlot',tr,base({yaxis:{title:'gCO₂/kWh',gridcolor:'#1b2a4d',rangemode:'tozero'},xaxis:{gridcolor:'#1b2a4d',title:'Target period start (UTC)'},margin:{l:56,r:18,t:16,b:70}}),cfg);
+    $('fanNote').textContent=`Batch ${d.issue_id.replace('issue_','')} (issued ${d.issued_at}).`+(d.actual?'':' Actuals are deliberately absent: this batch has not been scored yet.');
+  };
+  $('fanBtns').onclick=e=>{const b=e.target.closest('button'); if(b&&b.dataset.k){cur=b.dataset.k;[...$('fanBtns').children].forEach(x=>x.classList.toggle('on',x===b));draw();}};
+  $('fanModels').onclick=e=>{const b=e.target.closest('button'); if(b&&b.dataset.m){ if(sel.has(b.dataset.m)) sel.delete(b.dataset.m); else sel.add(b.dataset.m); b.classList.toggle('on'); draw();}};
+  draw();
+}
+function calib(){
+  const R=S.reliability||[]; if(!R.length){ empty('relPlot','Calibration appears after the first scored forecasts.'); empty('covPlot',''); return; }
+  $('relBucket').innerHTML=['all','h00_06','h06_24','h24_48'].map(b=>`<option value="${b}">${BL[b]} ahead</option>`).join('');
+  const draw=()=>{ const b=$('relBucket').value; const tr=[{x:[0,1],y:[0,1],mode:'lines',line:{color:'#5B6F96',dash:'dash'},name:'Perfect',hoverinfo:'skip'}];
+    R.filter(r=>r.bucket===b).forEach(r=>{ const p=r.points.filter(q=>q.est!==null);
+      tr.push({x:p.map(q=>q.tau),y:p.map(q=>q.est),mode:'lines+markers',name:NAME(r.model),line:{color:COL[r.model],width:2},marker:{size:7},
+        error_y:{type:'data',symmetric:false,array:p.map(q=>q.hi===null?0:q.hi-q.est),arrayminus:p.map(q=>q.lo===null?0:q.est-q.lo),color:COL[r.model],thickness:1.2,width:3},
+        hovertemplate:`${NAME(r.model)}<br>nominal %{x}<br>observed %{y:.3f}<extra></extra>`});});
+    Plotly.newPlot('relPlot',tr,base({xaxis:{title:'Nominal quantile level τ',range:[0,1],gridcolor:'#1b2a4d'},yaxis:{title:'Observed share ≤ quantile',range:[0,1],gridcolor:'#1b2a4d'}}),cfg);
+    const cv=[]; [['cov90',0.9,'90% interval'],['cov50',0.5,'50% interval']].forEach(([k,nom,lab])=>{ const rows=S.leaderboard.filter(r=>r.bucket===b&&r.comparable&&r[k]&&r[k].est!==null);
+      cv.push({type:'bar',name:lab,x:rows.map(r=>NAME(r.model)),y:rows.map(r=>r[k].est),marker:{color:k==='cov90'?'#4CC9F0':'#A78BFA'},
+        error_y:{type:'data',symmetric:false,array:rows.map(r=>r[k].hi===null?0:r[k].hi-r[k].est),arrayminus:rows.map(r=>r[k].lo===null?0:r[k].est-r[k].lo),color:'#E8EEF9',thickness:1.2,width:4}});});
+    Plotly.newPlot('covPlot',cv,base({barmode:'group',yaxis:{title:'Empirical coverage',range:[0,1],gridcolor:'#1b2a4d'},shapes:[{type:'line',xref:'paper',x0:0,x1:1,y0:0.9,y1:0.9,line:{color:'#4CC9F0',dash:'dash',width:1}},{type:'line',xref:'paper',x0:0,x1:1,y0:0.5,y1:0.5,line:{color:'#A78BFA',dash:'dash',width:1}}]}),cfg);
+  };
+  $('relBucket').onchange=draw; draw();
+}
+function timeseries(){
+  const T=S.timeseries||[]; if(!T.length){ empty('tsPlot','The time series appears after the first scored days.'); return; }
+  const tr=[]; T.forEach(t=>{ tr.push({x:t.dates,y:t.delta_pinball,mode:'markers',name:NAME(t.model)+' (daily)',marker:{color:COL[t.model],size:5,opacity:.45},legendgroup:t.model});
+    tr.push({x:t.dates,y:t.rolling7,mode:'lines',name:NAME(t.model)+' (7-day mean)',line:{color:COL[t.model],width:2.6},legendgroup:t.model}); });
+  Plotly.newPlot('tsPlot',tr,base({yaxis:{title:'Δ mean pinball vs NESO (negative = better)',gridcolor:'#1b2a4d',zerolinecolor:'#FFB020'},xaxis:{title:'Target date (UTC)',gridcolor:'#1b2a4d'},margin:{l:64,r:18,t:16,b:70}}),cfg);
+}
+function failure(){
+  const A=S.strata||[]; if(!A.length){ empty('strataPlot','Stratified diagnostics appear once there is data.'); $('worstTable').innerHTML=''; } else {
+    const dims=[...new Set(A.map(a=>a.dim))]; $('strataDim').innerHTML=dims.map(d=>`<option value="${d}">${A.find(a=>a.dim===d).dim_label}</option>`).join('');
+    const ORDER={block:['night 00-06','morning 06-12','afternoon 12-18','evening 18-24'],daytype:['weekday','weekend'],neso_level:['low','mid','high']};
+    const draw=()=>{ const d=$('strataDim').value; const rows=A.filter(a=>a.dim===d).sort((x,y)=>(ORDER[d]||[]).indexOf(x.value)-(ORDER[d]||[]).indexOf(y.value)); const ms=Object.keys(rows[0].models);
+      Plotly.newPlot('strataPlot',ms.map(m=>({type:'bar',name:NAME(m),x:rows.map(r=>r.value),y:rows.map(r=>r.models[m].mean_pinball),marker:{color:COL[m]}})),
+        base({barmode:'group',xaxis:{categoryorder:'array',categoryarray:rows.map(r=>r.value)},yaxis:{title:'Mean pinball (gCO₂/kWh), lower is better'}}),cfg); };
+    $('strataDim').onchange=draw; draw(); }
+  const W=(S.worst||[]).slice(0,10);
+  $('worstTable').innerHTML = W.length? '<tr><th>Target period (UTC)</th><th>Lead</th><th>NESO</th><th>Actual</th><th>Error</th><th>Inside 90% band of NESO+conformal?</th></tr>'+
+    W.map(w=>`<tr><td>${w.target_from.replace('T',' ').slice(0,16)}</td><td>${w.horizon_h} h</td><td>${f(w.neso,0)}</td><td>${f(w.actual,0)}</td><td class="${w.error>0?'off':''}">${w.error>0?'+':''}${f(w.error,0)}</td><td>${w.inside_cqr90===null?'n/a':(w.inside_cqr90?'yes':'<span style="color:var(--bad)">no</span>')}</td></tr>`).join('') : '';
+}
+function trust(){
+  const c=S.counts, led=(S.verification||{}).ledger||{};
+  const card=(h,b)=>`<div class="card"><h3>${h}</h3>${b}</div>`;
+  $('trustBody').innerHTML=
+    card('Pre-registration',`Forecast files are hash-chained. Chain status: <b style="color:${led.ok===false?'var(--bad)':(led.n_entries>0?'var(--good)':'var(--muted)')}">${led.ok===false?'BROKEN':(led.n_entries>0?'verified':'no entries yet')}</b><br><small style="color:var(--muted)">head ${(led.head||'').slice(0,16)}…</small>`)+
+    card('Push receipts',`Verified rows: <b>${c.verified_rows}</b><br>Unverified (receipt pending): <b>${c.unverified_rows}</b><br>Violated &amp; excluded: <b style="color:${c.violated_rows?'var(--bad)':'inherit'}">${c.violated_rows}</b><br>Missing actuals (excluded): <b>${c.missing_actual_rows}</b>`)+
+    card('Volume',`Batches: <b>${c.issues}</b><br>Forecast rows: <b>${c.forecast_rows}</b><br>Scored rows: <b>${c.scored_rows}</b><br>Built: <small>${S.meta.generated_at.slice(0,16).replace('T',' ')} UTC</small>`);
+}
+if(!S){ document.body.innerHTML='<div class="wrap"><h1>Dashboard template</h1><p>Run <code>gridscore site</code> to populate this page.</p></div>'; }
+else { $('metricBtns').onclick=e=>{const b=e.target.closest('button'); if(b){METRIC=b.dataset.k;[...$('metricBtns').children].forEach(x=>x.classList.toggle('on',x===b));verdicts();}}; chips(); banner(); verdicts(); leaderboard(); fan(); calib(); timeseries(); failure(); trust(); }
+</script>
+</body>
+</html>
