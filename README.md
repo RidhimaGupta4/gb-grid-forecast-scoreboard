@@ -191,7 +191,6 @@ Written before any data ([PROTOCOL §7](PROTOCOL.md#7-pre-registered-expectation
 - [ ] UK bank-holiday calendar as an ex-ante covariate (new model version)
 - [ ] Regional (DNO-region) intensity as a second, pre-registered study
 - [ ] Sequential-testing (alpha-spending) view to replace the provisional interim verdicts
-- [ ] 12-month formal write-up (target venue: RSS *Significance* / a short methods note)
 
 ## Testing
 
