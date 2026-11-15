@@ -54,12 +54,13 @@ def run_score(root, api: CarbonAPI | None = None, clock=utcnow) -> dict:
     todo["status"] = np.where(todo["actual"].isna(), "missing_actual", "scored")
 
     receipts = read_receipts(P["receipts"])
+    todo = todo.reset_index(drop=True)
     todo["prereg_status"] = "unverified"
-    todo["receipt_pushed_at"] = pd.NaT
+    pushed_map = {iid: as_utc(r["push_created_at"]) for iid, r in receipts.items()}
+    # tz-aware UTC column from the start (a tz-naive NaT column cannot accept aware stamps)
+    todo["receipt_pushed_at"] = pd.to_datetime(todo["issue_id"].map(pushed_map), utc=True)
     for iid, g in todo.groupby("issue_id"):
         todo.loc[g.index, "prereg_status"] = prereg_status(iid, g["target_from"], receipts).to_numpy()
-        if iid in receipts:
-            todo.loc[g.index, "receipt_pushed_at"] = pd.Timestamp(receipts[iid]["push_created_at"])
 
     metric_cols: dict[str, np.ndarray] = {}
     for mid, g in todo.groupby("model_id"):

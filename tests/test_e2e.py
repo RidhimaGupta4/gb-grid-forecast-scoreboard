@@ -126,3 +126,27 @@ def test_site_builds_with_no_data_and_with_data(run, tmp_path):
     html = p2.read_text()
     assert "__SUMMARY_JSON__" not in html and '"claims_enabled"' in html or '"insufficient_evidence"' in html
     assert (p2.parent / "plotly.min.js").stat().st_size > 1_000_000
+
+
+def test_scoring_with_receipts_present_regression(tmp_path):
+    """Regression: a tz-aware receipt timestamp used to crash scoring (tz-naive NaT column) on the first live run."""
+    root = tmp_path / "rcpt"
+    w = World(seed=5, days=170)
+    for d in range(12):
+        day = START + pd.Timedelta(days=d)
+        for h in (0, 6, 12, 18):
+            t = day + pd.Timedelta(hours=h, minutes=17)
+            run_issue(root, FakeAPI(w, now=t), Clk(t))
+    fc = load_forecasts(root)
+    iids = sorted(fc["issue_id"].unique())
+    P = paths(root)
+    with open(P["receipts"], "w") as f:
+        for iid in iids[:-1]:
+            t0 = fc[fc["issue_id"] == iid]["target_from"].min()
+            f.write(json.dumps({"issue_id": iid, "push_created_at": (t0 - pd.Timedelta(minutes=5)).isoformat().replace("+00:00", "Z")}) + "\n")
+    now = START + pd.Timedelta(days=12, hours=23)
+    res = run_score(root, FakeAPI(w, now=now), clock=lambda: now)
+    assert res["scored"] > 0 and res["violated"] == 0
+    sc = load_scores(root)
+    assert str(sc["receipt_pushed_at"].dt.tz) == "UTC"
+    assert (sc["prereg_status"] == "verified").any()
