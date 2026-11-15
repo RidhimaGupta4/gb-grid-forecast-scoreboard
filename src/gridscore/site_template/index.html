@@ -225,7 +225,12 @@ function timeseries(){
   const T=S.timeseries||[]; if(!T.length){ empty('tsPlot','The time series appears after the first scored days.'); return; }
   const tr=[]; T.forEach(t=>{ tr.push({x:t.dates,y:t.delta_pinball,mode:'markers',name:NAME(t.model)+' (daily)',marker:{color:COL[t.model],size:5,opacity:.45},legendgroup:t.model});
     tr.push({x:t.dates,y:t.rolling7,mode:'lines',name:NAME(t.model)+' (7-day mean)',line:{color:COL[t.model],width:2.6},legendgroup:t.model}); });
-  Plotly.newPlot('tsPlot',tr,base({yaxis:{title:'Δ mean pinball vs NESO (negative = better)',gridcolor:'#1b2a4d',zerolinecolor:'#FFB020'},xaxis:{title:'Target date (UTC)',gridcolor:'#1b2a4d'},margin:{l:64,r:18,t:16,b:70}}),cfg);
+  const ds=[...new Set(T.flatMap(t=>t.dates))].sort(), DAY=864e5;
+  const d0=Date.parse(ds[0]+'T00:00:00Z'), d1=Date.parse(ds[ds.length-1]+'T00:00:00Z');
+  const pad=Math.max(DAY, (d1-d0)*0.04);   // never let Plotly zoom to a sub-day range when there are few days
+  const xr=[new Date(d0-pad).toISOString().slice(0,10), new Date(d1+pad).toISOString().slice(0,10)];
+  Plotly.newPlot('tsPlot',tr,base({yaxis:{title:'Δ pinball vs NESO',gridcolor:'#1b2a4d',zerolinecolor:'#FFB020'},
+    xaxis:{title:'Target date (UTC)',gridcolor:'#1b2a4d',type:'date',range:xr,tickformat:'%d %b',dtick:(d1-d0)<7*DAY?DAY:undefined},margin:{l:64,r:18,t:16,b:70}}),cfg);
 }
 function failure(){
   const A=S.strata||[]; if(!A.length){ empty('strataPlot','Stratified diagnostics appear once there is data.'); $('worstTable').innerHTML=''; } else {
