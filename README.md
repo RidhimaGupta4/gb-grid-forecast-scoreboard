@@ -27,9 +27,9 @@ rebuilds a static dashboard.
 * **Real data only.** Every number comes from the public Carbon Intensity API. There is no simulation anywhere in the scoreboard.
 * **Leakage is defended in depth** (cut-off filters, hard abort guards, a hash-chained ledger, server-side push receipts, frozen hyper-parameters, a causality test that has been mutation-tested). It is *engineered against and audited*, not "impossible" — see [Trust model](#trust-model-what-pre-registration-does-and-does-not-prove).
 * **Two fair questions, not one flattering one.** NESO publishes a point forecast with no intervals, so interval models have a built-in advantage on pinball loss. The dashboard therefore reports **probabilistic score and point accuracy separately**, each as its own Holm-corrected pre-registered family.
-* **Honest by default.** No verdicts before 28 scored days; every exclusion is counted; pre-registered priors (including "I expect to lose") are written down in advance.
+* **Honest by default.** No verdicts before 28 scored days; every exclusion is counted; pre-registered priors are written down in advance.
 
-> **What you will see at launch.** An intentionally near-empty dashboard that says "warming up". Forecasts are scored ≥ 24 h after their targets, so the first numbers appear after ~2 days, credible comparisons need ≥ 28 days, and a full year is needed to cover every season. This is a long-running study, not a one-off notebook.
+> **What is seen at launch:** An intentionally near-empty dashboard that says "warming up". Forecasts are scored ≥ 24 h after their targets, so the first numbers appear after ~2 days, credible comparisons need ≥ 28 days, and a full year is needed to cover every season. This is a long-running study, not a one-off notebook.
 
 ---
 
@@ -191,7 +191,6 @@ Written before any data ([PROTOCOL §7](PROTOCOL.md#7-pre-registered-expectation
 - [ ] UK bank-holiday calendar as an ex-ante covariate (new model version)
 - [ ] Regional (DNO-region) intensity as a second, pre-registered study
 - [ ] Sequential-testing (alpha-spending) view to replace the provisional interim verdicts
-- [ ] 12-month formal write-up (target venue: RSS *Significance* / a short methods note)
 
 ## Testing
 
