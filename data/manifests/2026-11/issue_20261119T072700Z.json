@@ -1,0 +1,86 @@
+{
+  "code_git_sha": "b1c2290758f408cdfe8e64b5f0a6a0a1ed574c89",
+  "fetches": {
+    "history": [
+      {
+        "fetched_at": "2026-11-19T07:27:02.909213+00:00",
+        "n_bytes": 69499,
+        "sha256": "735d42d77ff83a5b54aac2a2e6051f05301f64ad585f3e3642549158daae7234",
+        "status": 200,
+        "url": "https://api.carbonintensity.org.uk/intensity/2026-08-25T06:27Z/2026-09-07T06:27Z"
+      },
+      {
+        "fetched_at": "2026-11-19T07:27:04.195978+00:00",
+        "n_bytes": 69126,
+        "sha256": "588b13acd873ba6e498c6a32dde1fa732bbcd5236db26b7d8311195027224de6",
+        "status": 200,
+        "url": "https://api.carbonintensity.org.uk/intensity/2026-09-07T06:27Z/2026-09-20T06:27Z"
+      },
+      {
+        "fetched_at": "2026-11-19T07:27:05.458340+00:00",
+        "n_bytes": 70134,
+        "sha256": "4c967719d3c916853d5274b8e081fcdfe5adcca277fc95206a6dc86deb7e2caa",
+        "status": 200,
+        "url": "https://api.carbonintensity.org.uk/intensity/2026-09-20T06:27Z/2026-10-03T06:27Z"
+      },
+      {
+        "fetched_at": "2026-11-19T07:27:06.719798+00:00",
+        "n_bytes": 69332,
+        "sha256": "f19dd5885168fc958addfef0e91a9106b3762b0d7e35c6e9a09e4963b280f922",
+        "status": 200,
+        "url": "https://api.carbonintensity.org.uk/intensity/2026-10-03T06:27Z/2026-10-16T06:27Z"
+      },
+      {
+        "fetched_at": "2026-11-19T07:27:07.577189+00:00",
+        "n_bytes": 69198,
+        "sha256": "835af3618b902d91ec8970f4f7528cf88ec8a03267b9ad873e37255739cafba3",
+        "status": 200,
+        "url": "https://api.carbonintensity.org.uk/intensity/2026-10-16T06:27Z/2026-10-29T06:27Z"
+      },
+      {
+        "fetched_at": "2026-11-19T07:27:08.833398+00:00",
+        "n_bytes": 70970,
+        "sha256": "ef7316c7f7429713a7bb1086e98f0050ac2ce74116004fa379e7f1f70de637a6",
+        "status": 200,
+        "url": "https://api.carbonintensity.org.uk/intensity/2026-10-29T06:27Z/2026-11-11T06:27Z"
+      },
+      {
+        "fetched_at": "2026-11-19T07:27:10.018114+00:00",
+        "n_bytes": 43374,
+        "sha256": "eaed36f65043f0e8836acf955073dd045f526eab773735efa366ccba56144d9e",
+        "status": 200,
+        "url": "https://api.carbonintensity.org.uk/intensity/2026-11-11T06:27Z/2026-11-19T06:27Z"
+      }
+    ],
+    "neso_fw48h": {
+      "fetched_at": "2026-11-19T07:27:01.606695+00:00",
+      "n_bytes": 10979,
+      "sha256": "707bb528ec841fe440f7d5066951f86fd7e8705024fe2e617e9bb2134f32fa30",
+      "status": 200,
+      "url": "https://api.carbonintensity.org.uk/intensity/2026-11-19T08:00Z/fw48h"
+    }
+  },
+  "first_target": "2026-11-19T08:00:00+00:00",
+  "history_cutoff": "2026-11-19T06:27:00.969345+00:00",
+  "issue_id": "issue_20261119T072700Z",
+  "issued_at": "2026-11-19T07:27:00.969345+00:00",
+  "models": {
+    "anomaly_persist": "1",
+    "climatology": "1",
+    "neso_cqr": "1",
+    "neso_point": "1"
+  },
+  "n_history_rows": 4128,
+  "protocol_version": "1.0.0",
+  "quality": {
+    "n_duplicates": 0,
+    "n_gaps": 0,
+    "n_implausible": 0,
+    "n_null_actual": 0,
+    "n_raw": 4128
+  },
+  "residual_memory_rows": 653,
+  "skipped_models": {
+    "neso_cqr": "step group 1-4: 36 residuals < 200"
+  }
+}
